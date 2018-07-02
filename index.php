@@ -11,7 +11,14 @@
 <script src="//code.jquery.com/jquery-1.10.2.js"></script>
 <script src="//code.jquery.com/ui/1.11.2/jquery-ui.js"></script>
 <link rel="stylesheet" href="/resources/demos/style.css">
+<link rel="stylesheet"
+ href="https://cdn.jsdelivr.net/npm/animate.css@3.5.2/animate.min.css">
+ <!-- or -->
+ <link rel="stylesheet"
+ href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.5.2/animate.min.css">
+
 <script>
+
   $(function() {
     $("#accordion").accordion({ header: "h3", collapsible: true, active: false, heightStyle: "content"});
   });
@@ -49,8 +56,7 @@ require ('assets/lib/mysql.php');
 require ('assets/lib/main.class.php');
 ?>
 
-
-<h1>Trainer Availability</h1>
+<h1 class="animated fadeinUp">Trainer Availability</h1>
 <hr>
 <?php
 $id = 1;
@@ -60,7 +66,7 @@ foreach ($res as $r) {
 }
 
 ?>
-<button class="add">Update my Availability</button> <button class="bluebutton">Apply for leave</button><br><br>
+<a href="form.php" class="add">Update my Availability</a><br><br>
 
 <h2>Trainers Availiable <span class="green">today</span> <?php echo strtoupper(date("d F Y")); ?></h2>
 
@@ -84,7 +90,7 @@ foreach ($availability as $av) {
   <tr>
     <td style="font-size:16px; text-align: left;"><?php echo $av['name']; ?></td>
     <td><span style="font-size:16px"><a href="https://www.ivao.aero/members/person/details.asp?ID=<?php echo $av['vid']; ?>" target="_blank" class="button"><?php echo $av['vid']; ?></a></span></td>
-    <td style="font-size:16px; text-align: left;">UNABLE TO GET</td>
+    <td style="font-size:16px; text-align: left;">(not integrated yet)</td>
     <td style="font-size:16px; text-align: left;"><a href="http://staff.ivao.in/tmcadmin/schedule.php" class="greenbutton">Schedule a Training</a></td>
   </tr>
   <?php
@@ -94,21 +100,6 @@ foreach ($availability as $av) {
 </tbody>
 </table>
 
-<!-- <br>
-<hr>
-<h2>Who's available next</h2>
-<div id="accordion" style="font-size:12px; text-align:justify;" class="ui-accordion ui-widget ui-helper-reset" role="tablist">
-
-  <h3 class="ui-accordion-header ui-state-default ui-accordion-icons ui-corner-all" role="tab" id="ui-id-1" aria-controls="ui-id-2" aria-selected="false" aria-expanded="true" tabindex="0">
-    <span class="ui-accordion-header-icon ui-icon ui-icon-triangle-1-e"></span>
-    3 JULY 2018
-  </h3>
-  <div class="ui-accordion-content ui-helper-reset ui-widget-content ui-corner-bottom" id="ui-id-2" aria-labelledby="ui-id-1" role="tabpanel" aria-hidden="true" style="display: none;"><ul>
-	<li>Trainer : Jifry Shaheem | VID : 506123 </li>
-  <li>Trainer : Jifry Shaheem | VID : 506123 </li>
-  <li>Trainer : Jifry Shaheem | VID : 506123 </li>
-  </ul></div>
-</div> -->
 <br>
 <hr>
 <h2>IVAO India Trainers</h2>
@@ -118,10 +109,10 @@ foreach ($availability as $av) {
 <td>Trainer Name</td>
 <td>IVAO VID</td>
 <td>Email</td>
-<td>Availability (June 2018)</td>
+<td>Availability (<?php echo date('M Y'); ?>)</td>
+<td>Remarks</td>
 </tr>
 <?php
-
 
 
 $trainers = TA::get_all_trainers();
@@ -134,28 +125,29 @@ foreach ($trainers as $tar) {
     <td style="font-size:16px; text-align: left;">
       <?php
         // print_r();
+        $avl_details = TA::get_avl_details($tar['vid']);
         $eachdate = TA::trainer_availability($tar['vid']);
         if(!$eachdate) {
-          echo '<span style="color: red;">Data not yet entered!</span>';
+          echo '<span class="animated infinite zoomin" style="color: red;">No data!</span>';
+        } elseif($avl_details['dates'] == 'leave') {
+          echo '<span style="color: red;">ON LEAVE</span>';
         } else {
           foreach ($eachdate as $ed) {
             $dates = $ed['dates'];
-
+            // All the dates in the DB are stored in an array. Ex : 1,2,3,4,5,6. So we use
+            // php's explode function to seperate the dates with the "comma" in between them.
+            // This function is named "decipher_dates"
             $dates_array = TA::decipher_dates($dates);
 
-            $j = 0;
-
             foreach($dates_array as $da) {
-
-
-              $date = $da[$j];
-              $month = '6';
-              $year = '2018';
+              $date = $da;
+              $month = date('m');
+              $year = date('Y');
 
               $timestamp = strtotime($year.'-'.$month.'-'.$date);
-              $day = date('l', $timestamp);
-              echo ' '.$date.' ('.$day.')<br>';
-              $j = $j++;
+              $day = date('D', $timestamp);
+              echo ''.$date.' ('.$day.')<br>';
+              // print_r($da);
             }
           }
         }
@@ -163,76 +155,22 @@ foreach ($trainers as $tar) {
         // print_r($dates_array);
       ?>
     </td>
+    <td style="font-size:16px; text-align: left;">
+      <?php if($avl_details['remarks'] != '') {
+        echo $avl_details['remarks'];
+      } else {
+        echo 'No Remarks (Blank)';
+      }
+      ?>
+    </td>
   </tr>
   <?php
 }
 
 ?>
-
-  <!-- <tr>
-    <td style="font-size:16px; text-align: left;">Rohit Dalaya</td>
-    <td><span style="font-size:16px"><a href="https://www.ivao.aero/members/person/details.asp?ID=209766" target="_blank" class="button">209766</a></span></td>
-    <td style="font-size:16px; text-align: left;">in-dir@ivao.aero</td>
-    <td style="font-size:16px; text-align: left;">1,12,13,14,16</td>
-  </tr>
-  <tr>
-    <td style="font-size:16px; text-align: left;">Karan Malik</td>
-    <td><span style="font-size:16px"><a href="https://www.ivao.aero/members/person/details.asp?ID=209766" target="_blank" class="button">209766</a></span></td>
-    <td style="font-size:16px; text-align: left;">in-dir@ivao.aero</td>
-    <td style="font-size:16px; text-align: left;">1,12,13,14,16</td>
-  </tr>
-  <tr>
-    <td style="font-size:16px; text-align: left;">Prajwol Shrestha </td>
-    <td><span style="font-size:16px"><a href="https://www.ivao.aero/members/person/details.asp?ID=209766" target="_blank" class="button">209766</a></span></td>
-    <td style="font-size:16px; text-align: left;">in-dir@ivao.aero</td>
-    <td style="font-size:16px; text-align: left;">1,12,13,14,16</td>
-  </tr>
-  <tr>
-    <td style="font-size:16px; text-align: left;">Leonard Selvaraja</td>
-    <td><span style="font-size:16px"><a href="https://www.ivao.aero/members/person/details.asp?ID=209766" target="_blank" class="button">209766</a></span></td>
-    <td style="font-size:16px; text-align: left;">in-dir@ivao.aero</td>
-    <td style="font-size:16px; text-align: left;">1,12,13,14,16</td>
-  </tr>
-  <tr>
-    <td style="font-size:16px; text-align: left;">Jifry Shaheem</td>
-    <td><span style="font-size:16px"><a href="https://www.ivao.aero/members/person/details.asp?ID=209766" target="_blank" class="button">209766</a></span></td>
-    <td style="font-size:16px; text-align: left;">in-dir@ivao.aero</td>
-    <td style="font-size:16px; text-align: left;">1,12,13,14,16</td>
-  </tr>
-  <tr>
-    <td style="font-size:16px; text-align: left;">Ankit Bisht</td>
-    <td><span style="font-size:16px"><a href="https://www.ivao.aero/members/person/details.asp?ID=209766" target="_blank" class="button">209766</a></span></td>
-    <td style="font-size:16px; text-align: left;">in-dir@ivao.aero</td>
-    <td style="font-size:16px; text-align: left;">1,12,13,14,16</td>
-  </tr> -->
-</tbody>
-</table>
-<br>
-<hr><h2>Active LOA's<br><small>List of trainers who are on Leave</small></h2>
-
-<table class="table" width="100%">
-<tbody>
-<tr>
-  <td>Trainer Name</td>
-  <td>IVAO VID</td>
-  <td>LOA Duration</td>
-  <td>Status</td>
-  </tr>
-
-    <tr>
-      <td style="font-size:16px; text-align: left;">Rohit Dalaya</td>
-      <td><span style="font-size:16px"><a href="https://www.ivao.aero/members/person/details.asp?ID=209766" target="_blank" class="button">209766</a></span></td>
-      <td style="font-size:16px; text-align: left;">12 MAR 2018 - 20 JUN 2018 (20 days more)</td>
-      <td style="font-size:16px; text-align: left;">Approved</td>
-    </tr>
 </tbody>
 </table>
 
-<br><br><table style="width:100%; color:#696969;">
-		<tbody><tr style="color:#696969; font-family:arial; font-size:13px">
-			<td style="width: 50%;">IVAO - India © 2015 - 2017</td>
-			<td style="text-align: right; width: 50%;">staff.ivao.in</td>
-		</tr>
-</tbody></table></div>
+</div>
 
 </body></html>
